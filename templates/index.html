@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Hand Filter</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #00ffcc;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        }
+
+        .main-container {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .video-container {
+            border: 2px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            width: 640px;
+            height: 480px;
+            background-color: #000;
+        }
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-capture {
+            background-color: #ff0055;
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
+        }
+
+        .btn-capture:hover {
+            background-color: #ff3377;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
+        }
+
+        .btn-capture:active {
+            transform: scale(0.95);
+        }
+
+        .instructions {
+            background-color: #1e1e1e;
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: flex;
+            gap: 20px;
+            font-size: 1.1rem;
+        }
+
+        .instruction-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon {
+            font-size: 1.5rem;
+        }
+
+        .right-panel {
+            width: 300px;
+            background-color: #1e1e1e;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .gallery-title {
+            margin-top: 0;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            color: #00ffcc;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .gallery-item {
+            position: relative;
+            aspect-ratio: 4/3;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+        .gallery-item:hover {
+            border-color: #00ffcc;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Scrollbar styling */
+        .right-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        .right-panel::-webkit-scrollbar-track {
+            background: #121212; 
+            border-radius: 4px;
+        }
+        .right-panel::-webkit-scrollbar-thumb {
+            background: #333; 
+            border-radius: 4px;
+        }
+        .right-panel::-webkit-scrollbar-thumb:hover {
+            background: #555; 
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Magic Hand Filter</h1>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="video-container">
+                <img src="{{ url_for('video_feed') }}" alt="Video Feed">
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-capture" onclick="captureImage()">📸 Capture</button>
+            </div>
+
+            <div class="instructions">
+                <div class="instruction-item">
+                    <span class="icon">🖐</span>
+                    <span>Palm: Normal</span>
+                </div>
+                <div class="instruction-item">
+                    <span class="icon">✊</span>
+                    <span>Fist: Gray</span>
+                </div>
+                <div class="instruction-item">
+                    <span class="icon">✌️</span>
+                    <span>Peace: Sketch</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <h2 class="gallery-title">Gallery</h2>
+            <div class="gallery-grid" id="gallery">
+                <!-- Images will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function captureImage() {
+            fetch('/capture', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // alert('Image captured!'); // Optional: remove alert for smoother experience
+                        loadGallery(); // Refresh gallery
+                    } else {
+                        alert('Capture failed: ' + data.message);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function loadGallery() {
+            fetch('/gallery')
+                .then(response => response.json())
+                .then(images => {
+                    const gallery = document.getElementById('gallery');
+                    gallery.innerHTML = ''; // Clear existing
+                    
+                    images.forEach(filename => {
+                        const div = document.createElement('div');
+                        div.className = 'gallery-item';
+                        
+                        const img = document.createElement('img');
+                        img.src = `/output/${filename}`;
+                        img.alt = filename;
+                        img.onclick = () => window.open(img.src, '_blank'); // Open full size on click
+                        
+                        div.appendChild(img);
+                        gallery.appendChild(div);
+                    });
+                })
+                .catch(error => console.error('Error loading gallery:', error));
+        }
+
+        // Load gallery on page load
+        document.addEventListener('DOMContentLoaded', loadGallery);
+        
+        // Refresh gallery periodically to show gesture-triggered captures
+        setInterval(loadGallery, 5000); 
+    </script>
+
+</body>
+</html>
